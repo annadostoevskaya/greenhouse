@@ -22,7 +22,7 @@ project (blink C CXX ASM)
 
 set(MCU         atmega328p)
 add_definitions(-DF_CPU=16E6)
-add_definitions(-D__AVR_ATtiny2313__)
+add_definitions(-D__AVR_ATmega328P__)
 add_definitions(-DBAUD=9600UL)
 
 # Variables regarding the AVR chip
