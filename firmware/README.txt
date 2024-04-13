@@ -1,6 +1,5 @@
 # greenhouse firmware
 
 References:
-- https://habr.com/ru/articles/382565/
-- https://github.com/billygr/avr-ethernet-w5100
-- https://www.seanet.com/~karllunt/w5100_library.html
+- Ethernet Shield Problem: https://www.seanet.com/~karllunt/w5100_library.html
+- Ethernet Shield Schematic: https://www.arduino.cc/en/uploads/Main/arduino-ethernet-shield-06-schematic.pdf
