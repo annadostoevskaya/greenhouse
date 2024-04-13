@@ -27,11 +27,7 @@ add_definitions(-DBAUD=9600UL)
 
 # Variables regarding the AVR chip
 set(AVRDUDE_PROGTYPE    arduino)
-if (WIN32)
-    set(AVRDUDE_PORT    COM3)
-elseif(UNIX)
-    set(AVRDUDE_PORT    /dev/ttyACM0)
-endif()
+set(AVRDUDE_PORT        /dev/ttyUSB0)
 set(AVRDUDE_DEVICE      m328p)
 set(AVRDUDE_BAUD        115200)
 set(AVRDUDE_FUSES       ) # -U lfuse:w:0xde:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m)
