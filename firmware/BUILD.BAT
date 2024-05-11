@@ -1,4 +1,4 @@
+@ECHO OFF
 
-cmake -S . -B build -G Ninja
-cmake --build build
-cp build\compile_commands.json compile_commands.json
+arduino-cli --no-color compile -u -t -p COM3 --verbose --warnings all -b arduino:avr:uno --output-dir build
+
