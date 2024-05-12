@@ -6,7 +6,7 @@
  *
  * Description:
  * - Libraries:
- * - arduino-cli lib install Ethernet@2.0.2
+ * - arduino-cli lib install Ethernet@2.0.0
  * -
  * - Hardware:
  * - Ethernet Shield <EMPTY>
@@ -14,8 +14,10 @@
  */
 
 #include <stdint.h>
+// #include <string.h>
 
 #include <SPI.h>
+#include <Client.h>
 #include <Ethernet.h>
 
 enum EthernetDHCPStatus
@@ -31,14 +33,22 @@ enum EthernetDHCPStatus
 // TODO(annad): Parse this data from .ini file
 uint8_t        g_MAC[] = { 0x6B, 0x62, 0x75, 0x5F, 0x67, 0x68 };
 EthernetServer g_Server(80);
+char           g_Token[] = "gh_YnVrZXRvdl9ncmVlbmhvdXNl"; // X-Green-House-Token:
+
+// config.json
+// [{
+//  "MAC": "6b:62:75:5f:67:68",
+//  "server_port": 80,
+//  "gh_token": "gh_YnVrZXRvdl9ncmVlbmhvdXNl"
+// }]
 
 void setup() {
   // NOTE(annad):
   // [!] Disable the SD card by switching pin 4 high
   // not using the SD card in this program, but if an SD card is left in the socket,
   // it may cause a problem with accessing the Ethernet chip, unless disabled
-  pinMode(4, OUTPUT);
-  digitalWrite(4, HIGH);
+  // pinMode(4, OUTPUT);
+  // digitalWrite(4, HIGH);
 
   Serial.begin(9600);
 
@@ -62,9 +72,61 @@ void setup() {
   }
 }
 
-void request_handling(EthernetClient& cli)
+class HTTPRequest
 {
+public:
+  String method;
+  String url;
+  String version;
 
+  void parse(Client& cli)
+  {
+    parse_method(cli);
+    parse_url(cli);
+    parse_version(cli);
+  }
+
+  void parse_method(Client& cli)
+  {
+    char ch = '\0';
+    while (cli.connected() && cli.available() && (ch = cli.read()) != ' ')
+    {
+      this->method += ch;
+    }
+  }
+
+  void parse_url(Client& cli)
+  {
+    char ch = '\0';
+    while (cli.connected() && cli.available() && (ch = cli.read()) != ' ')
+    {
+      this->url += ch;
+    }
+  }
+
+  void parse_version(Client& cli)
+  {
+    char ch = '\0';
+    while (cli.connected() && cli.available() && (ch = cli.read()) != '\n')
+    {
+      this->version += ch;
+    }
+
+    while (cli.connected() && cli.available() && (ch = cli.read()) != '\r')
+    {
+      ; // skip '\r'
+    }
+  }
+};
+
+void cli_processing(Client& cli)
+{
+  HTTPRequest req;
+  req.parse(cli);
+
+  Serial.println(req.method);
+  Serial.println(req.url);
+  Serial.println(req.version);
 }
 
 void loop()
@@ -73,7 +135,7 @@ void loop()
 
   if (cli)
   {
-    request_handling(&cli);
+    cli_processing(cli);
   }
 
   switch (Ethernet.maintain())
