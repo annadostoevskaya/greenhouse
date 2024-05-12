@@ -84,6 +84,16 @@ public:
     parse_method(cli);
     parse_url(cli);
     parse_version(cli);
+
+    skip(cli);
+  }
+
+  void skip(Client& cli)
+  {
+    while (cli.connected() && cli.available() && cli.read())
+    {
+      ;
+    }
   }
 
   void parse_method(Client& cli)
@@ -111,11 +121,6 @@ public:
     {
       this->version += ch;
     }
-
-    while (cli.connected() && cli.available() && (ch = cli.read()) != '\r')
-    {
-      ; // skip '\r'
-    }
   }
 };
 
@@ -124,9 +129,9 @@ void cli_processing(Client& cli)
   HTTPRequest req;
   req.parse(cli);
 
-  Serial.println(req.method);
-  Serial.println(req.url);
-  Serial.println(req.version);
+  Serial.print(req.method + ' ');
+  Serial.print(req.url + ' ');
+  Serial.print(req.version + '\n');
 }
 
 void loop()
