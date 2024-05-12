@@ -30,46 +30,46 @@ enum EthernetDHCPStatus
 };
 
 
-// TODO(annad): Parse this data from .ini file
-uint8_t        g_MAC[] = { 0x6B, 0x62, 0x75, 0x5F, 0x67, 0x68 };
-EthernetServer g_Server(80);
-char           g_Token[] = "gh_YnVrZXRvdl9ncmVlbmhvdXNl"; // X-Green-House-Token:
-
+// TODO(annad): Parse this data from .json file
 // config.json
 // [{
-//  "MAC": "6b:62:75:5f:67:68",
+//  "MAC": "00:aa:bb:cc:de:ad",
 //  "server_port": 80,
 //  "gh_token": "gh_YnVrZXRvdl9ncmVlbmhvdXNl"
 // }]
+//
+// TODO(annad): DHCP don't allocate IP without 0x00 prefix in MAC address, 
+//   Research this later!
+uint8_t        g_MAC[] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0xAD };
+EthernetServer g_Server(80);
+char           g_Token[] = "gh_YnVrZXRvdl9ncmVlbmhvdXNl"; // X-Green-House-Token:
 
 void setup() {
   // NOTE(annad):
   // [!] Disable the SD card by switching pin 4 high
   // not using the SD card in this program, but if an SD card is left in the socket,
   // it may cause a problem with accessing the Ethernet chip, unless disabled
-  // pinMode(4, OUTPUT);
-  // digitalWrite(4, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
 
   Serial.begin(9600);
 
   while (!Serial) { ; }
 
   Serial.println("Intializing Ethernet...");
-  if (Ethernet.begin(g_MAC))
-  {
-    Serial.print("IP address: ");
-    Serial.println(Ethernet.localIP());
-    Serial.println("Initializing server...");
-    g_Server.begin();
-    Serial.println("Start to listen for clients");
-  }
-  else
+  if (Ethernet.begin(g_MAC) == 0)
   {
     Serial.println("Failed to configure Ethernet using DHCP.");
     if (Ethernet.hardwareStatus() == EthernetNoHardware)  Serial.println("Ethernet shield was not found.");
     else if (Ethernet.linkStatus() == LinkOFF)            Serial.println("Ethernet cable is not connected.");
     for (;;) { delay(1); }
   }
+
+  Serial.print("IP address: ");
+  Serial.println(Ethernet.localIP());
+  Serial.println("Initializing server...");
+  g_Server.begin();
+  Serial.println("Start to listen for clients");
 }
 
 class HTTPRequest
