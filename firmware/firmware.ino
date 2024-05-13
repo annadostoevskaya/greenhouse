@@ -6,7 +6,9 @@
  *
  * Description:
  * - Libraries:
- * - arduino-cli lib install Ethernet@2.0.0
+ * - Ethernet@2.0.0
+ * - ArduinoHttpClient@0.6.0
+ * - SD@1.2.4
  * -
  * - Hardware:
  * - Ethernet Shield <EMPTY>
@@ -19,6 +21,7 @@
 #include <SPI.h>
 #include <Client.h>
 #include <Ethernet.h>
+#include <ArduinoHttpClient.h>
 
 enum EthernetDHCPStatus
 {
@@ -28,7 +31,6 @@ enum EthernetDHCPStatus
   ETHERNET_DHCP_REBIND_FAILED,
   ETHERNET_DHCP_REBIND_SUCCESS
 };
-
 
 // TODO(annad): Parse this data from .json file
 // config.json
@@ -41,7 +43,6 @@ enum EthernetDHCPStatus
 // TODO(annad): DHCP don't allocate IP without 0x00 prefix in MAC address, 
 //   Research this later!
 uint8_t        g_MAC[] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0xAD };
-EthernetServer g_Server(80);
 char           g_Token[] = "gh_YnVrZXRvdl9ncmVlbmhvdXNl"; // X-Green-House-Token:
 
 void setup() {
@@ -67,81 +68,22 @@ void setup() {
 
   Serial.print("IP address: ");
   Serial.println(Ethernet.localIP());
-  Serial.println("Initializing server...");
-  g_Server.begin();
-  Serial.println("Start to listen for clients");
-}
-
-class HTTPRequest
-{
-public:
-  String method;
-  String url;
-  String version;
-
-  void parse(Client& cli)
-  {
-    parse_method(cli);
-    parse_url(cli);
-    parse_version(cli);
-
-    skip(cli);
-  }
-
-  void skip(Client& cli)
-  {
-    while (cli.connected() && cli.available() && cli.read())
-    {
-      ;
-    }
-  }
-
-  void parse_method(Client& cli)
-  {
-    char ch = '\0';
-    while (cli.connected() && cli.available() && (ch = cli.read()) != ' ')
-    {
-      this->method += ch;
-    }
-  }
-
-  void parse_url(Client& cli)
-  {
-    char ch = '\0';
-    while (cli.connected() && cli.available() && (ch = cli.read()) != ' ')
-    {
-      this->url += ch;
-    }
-  }
-
-  void parse_version(Client& cli)
-  {
-    char ch = '\0';
-    while (cli.connected() && cli.available() && (ch = cli.read()) != '\n')
-    {
-      this->version += ch;
-    }
-  }
-};
-
-void cli_processing(Client& cli)
-{
-  HTTPRequest req;
-  req.parse(cli);
-
-  Serial.print(req.method + ' ');
-  Serial.print(req.url + ' ');
-  Serial.print(req.version + '\n');
 }
 
 void loop()
 {
-  EthernetClient cli = g_Server.available();
+  EthernetClient eth0;
+  HttpClient http = HttpClient(eth0, "google.com", 80);
+  http.get("/");
 
-  if (cli)
-  {
-    cli_processing(cli);
-  }
+  uint32_t status = http.responseStatusCode();
+  String response = http.responseBody();
+
+  Serial.print("Status code: ");
+  Serial.println(status);
+  Serial.println("Response: ");
+  Serial.println(response);
+  delay(10000);
 
   switch (Ethernet.maintain())
   {
