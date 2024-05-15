@@ -14,19 +14,16 @@
  * - Libraries:
  * - SPI@1.0
  * - Ethernet@2.0.2
- * - ArduinoHttpClient@0.6.0
  * - SD@1.2.4
- * - ArduinoJson@7.0.4
+ * - IniFile@1.3.0
  * -
  */
 
 #include <stdint.h>
 
+#include <IniFile.h>
 #include <SPI.h>
-#include <Client.h>
-#include <Ethernet.h>
-#include <ArduinoHttpClient.h>
-#include <ArduinoJson.h>
+#include <SD.h>
 
 enum EthernetDHCPStatus
 {
@@ -37,79 +34,127 @@ enum EthernetDHCPStatus
   ETHERNET_DHCP_REBIND_SUCCESS
 };
 
-// TODO(annad): Parse this data from .json file
-// config.json
-// [{
-//  "MAC": "00:aa:bb:cc:de:ad",
-//  "server_port": 80,
-//  "gh_token": "gh_YnVrZXRvdl9ncmVlbmhvdXNl"
-// }]
-//
-// TODO(annad): DHCP don't allocate IP without 0x00 prefix in MAC address, 
-//   Research this later!
-uint8_t        g_MAC[6];
-char           g_Token[] = "gh_YnVrZXRvdl9ncmVlbmhvdXNl"; // X-Green-House-Token:
 
-char config_json[] = "{\n"
-"  \"MAC\":\"00:aa:bb:cc:de:ad\",\n"
-"  \"gh_token\": \"gh_YnVrZXRvdl9ncmVlbmhvdXNl\",\n"
-"  \"endpoint.check_access\":\"/device/check_access\",\n"
-"  \"endpoint.update_state\":\"/greenhouse/create\"\n"
-"}\n";
-
-
-void mac_str2arr(String s, uint8_t mac[6])
+void printErrorMessage(uint8_t e, bool eol = true)
 {
-  // FIXME(annad): Cringe...
-  (void)(s);
-  uint8_t tmp[] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0xDA };
-  for (int16_t i = 0; i < 6; i += 1)
-  {
-    mac[i] = tmp[i];
+  switch (e) {
+  case IniFile::errorNoError:
+    Serial.print("no error");
+    break;
+  case IniFile::errorFileNotFound:
+    Serial.print("file not found");
+    break;
+  case IniFile::errorFileNotOpen:
+    Serial.print("file not open");
+    break;
+  case IniFile::errorBufferTooSmall:
+    Serial.print("buffer too small");
+    break;
+  case IniFile::errorSeekError:
+    Serial.print("seek error");
+    break;
+  case IniFile::errorSectionNotFound:
+    Serial.print("section not found");
+    break;
+  case IniFile::errorKeyNotFound:
+    Serial.print("key not found");
+    break;
+  case IniFile::errorEndOfFile:
+    Serial.print("end of file");
+    break;
+  case IniFile::errorUnknownError:
+    Serial.print("unknown error");
+    break;
+  default:
+    Serial.print("unknown error value");
+    break;
   }
+  if (eol)
+    Serial.println();
 }
 
 void setup()
 {
   Serial.begin(9600);
 
-  JsonDocument config;
-  DeserializationError err = deserializeJson(config, config_json);
-
-  if (err)
+  Serial.println("Info: Intializing SD card...");
+  if (!SD.begin(4))
   {
-    Serial.print("JSON deserialize failed: ");
-    Serial.println(err.f_str());
     // TODO(annad): Error handling!
-    for (;;) { delay(1); }
+    Serial.println("Error: SD card initialization failed!");
+    return;
   }
 
-  Serial.println("Device Config");
-  Serial.print("MAC: ");
-  Serial.println(config["MAC"].as<String>());
-  Serial.print("gh_token: ");
-  Serial.println(config["gh_token"].as<const char*>());
-  Serial.print("endpoint.check_access: ");
-  Serial.println(config["endpoint.check_access"].as<const char*>());
-  Serial.print("endpoint.update_state: ");
-  Serial.println(config["endpoint.update_state"].as<const char*>());
-
-  mac_str2arr(config["MAC"].as<String>(), g_MAC);
-  for (int i = 0; i < 6; i += 1)
+  if (!SD.exists("CONFIG.INI"))
   {
-    Serial.print(g_MAC[i], HEX);
-    Serial.print(" ");
+    // TODO(annad): Error handling!
+    Serial.println("Error: Can't find config file!");
+    return;
   }
 
+  IniFile ini("CONFIG.INI");
+
+  if (!ini.open()) {
+    Serial.print("Ini file does not exist");
+    // Cannot do anything else
+    while (1)
+      ;
+  }
+  Serial.println("Ini file exists");
+
+  const size_t size = 80;
+  char buffer[size];
+  for (size_t i = 0; i < size; i += 1)
+  {
+    buffer[i] = 0;
+  }
+
+  // Check the file is valid. This can be used to warn if any lines
+  // are longer than the buffer.
+  if (!ini.validate(buffer, size)) {
+    Serial.print("ini file ");
+    Serial.print(ini.getFilename());
+    Serial.print(" not valid: ");
+    printErrorMessage(ini.getError());
+    while (1)
+      ;
+  }
+  
+  // Fetch a value from a key which is present
+  if (ini.getValue("network", "mac", buffer, size)) {
+    Serial.print("section 'network' has an entry 'mac' with value ");
+    Serial.println(buffer);
+  } else {
+    Serial.print("Could not read 'mac' from section 'network', error was ");
+    printErrorMessage(ini.getError());
+  }
+
+/*
+  File f_Config = SD.open("CONFIG.INI");
+
+  Serial.println("Info: Allocating memory for config file...");
+  size_t cfg_size = f_Config.size();
+  char *cfg_content = (char *)malloc(f_Config.size()) + 1;
+  cfg_content[cfg_size] = '\0';
+  if (!cfg_content)
+  {
+    Serial.println("Error: Failed to allocate memory!");
+    return;
+  }
+
+  Serial.println("Info: Reading config file...");
+  if (f_Config.read(cfg_content, cfg_size) == -1)
+  {
+    Serial.println("Error: Failed to read config file.");
+  }
+
+  Serial.println("Config content: ");
+  Serial.println(cfg_content);
+
+  f_Config.close();
+*/
   return;
-
-  // NOTE(annad):
-  // [!] Disable the SD card by switching pin 4 high
-  // not using the SD card in this program, but if an SD card is left in the socket,
-  // it may cause a problem with accessing the Ethernet chip, unless disabled
-  pinMode(4, OUTPUT);
-  digitalWrite(4, HIGH);
-
+/*
   Serial.begin(9600);
 
   while (!Serial) { ; }
@@ -125,12 +170,13 @@ void setup()
 
   Serial.print("IP address: ");
   Serial.println(Ethernet.localIP());
+*/
 }
 
 void loop()
 {
   return;
-
+/*
   EthernetClient eth0;
   HttpClient http = HttpClient(eth0, "google.com", 80);
   http.get("/");
@@ -164,4 +210,5 @@ void loop()
     case ETHERNET_DHCP_REBIND_FAILED: Serial.println("Error: rebind fail"); break;
     default: {} break;
   }
+*/
 }
