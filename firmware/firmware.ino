@@ -15,13 +15,11 @@
  * - SPI@1.0
  * - Ethernet@2.0.2
  * - SD@1.2.4
- * - IniFile@1.3.0
  * -
  */
 
 #include <stdint.h>
 
-#include <IniFile.h>
 #include <SPI.h>
 #include <SD.h>
 
@@ -34,43 +32,110 @@ enum EthernetDHCPStatus
   ETHERNET_DHCP_REBIND_SUCCESS
 };
 
-
-void printErrorMessage(uint8_t e, bool eol = true)
+size_t str_compare(const char* begin, const char* end, const char* cstr)
 {
-  switch (e) {
-  case IniFile::errorNoError:
-    Serial.print("no error");
-    break;
-  case IniFile::errorFileNotFound:
-    Serial.print("file not found");
-    break;
-  case IniFile::errorFileNotOpen:
-    Serial.print("file not open");
-    break;
-  case IniFile::errorBufferTooSmall:
-    Serial.print("buffer too small");
-    break;
-  case IniFile::errorSeekError:
-    Serial.print("seek error");
-    break;
-  case IniFile::errorSectionNotFound:
-    Serial.print("section not found");
-    break;
-  case IniFile::errorKeyNotFound:
-    Serial.print("key not found");
-    break;
-  case IniFile::errorEndOfFile:
-    Serial.print("end of file");
-    break;
-  case IniFile::errorUnknownError:
-    Serial.print("unknown error");
-    break;
-  default:
-    Serial.print("unknown error value");
-    break;
+    for (const char* iter = begin; iter < end; iter += 1)
+    {
+      if (*cstr == '\0' || *iter != *cstr++)
+      {
+        return false;
+      }
+    }
+
+    return true;
+}
+
+void str_trim(const char* begin, const char* end)
+{
+
+}
+
+size_t ini_search_section(const char* src, const char* section)
+{
+  size_t cursor = 0;
+  const char* begin = nullptr;
+  const char* end = nullptr;
+
+  while (src[cursor] != '\0')
+  {
+    while (src[cursor] != '\0' && src[cursor++] != '[')
+      ;;
+
+    begin = src + cursor;
+
+    while (src[cursor] != '\0' && src[cursor++] != ']')
+      ;;
+
+    end = src + cursor - 1;
+
+    while (src[cursor] != '\0' && src[cursor++] != '\n')
+      ;;
+
+    if (str_compare(begin, end, section))
+      return cursor;
   }
-  if (eol)
-    Serial.println();
+
+  return -1;
+}
+
+size_t ini_search_key(const char* src, const char* key)
+{
+  size_t cursor = 0;
+  const char* begin = nullptr;
+  const char* end = nullptr;
+
+  while (src[cursor] != '\0')
+  {
+    begin = src + cursor;
+
+    while (src[cursor] != '\0' && src[cursor++] != '=')
+      ;;
+
+    end = src + cursor - 1;
+    while (*(end - 1) == ' ') end -= 1;
+
+    if (str_compare(begin, end, key))
+    {
+      while (src[cursor] != '\0' && src[cursor] == ' ')
+        cursor += 1;
+      return cursor;
+    }
+
+    while (src[cursor] != '\0' && src[cursor++] != '\n')
+      ;;
+  }
+
+  return -1;
+}
+
+bool ini_get_value(const char* src, const char* section, const char* key, char *dst, size_t dst_size)
+{
+  size_t section_shift = ini_search_section(src, section);
+  if (section_shift == -1)
+  {
+    return false;
+  }
+
+  size_t key_shift = ini_search_key(src + section_shift, key);
+  if (key_shift == -1)
+  {
+    return false;
+  }
+
+  size_t s = section_shift + key_shift;
+  for (int16_t i = 0; i < dst_size; i += 1)
+  {
+    char ch = src[s + i];
+    if (ch == '\r' || ch == '\n' || ch == '\0')
+    {
+      dst[i] = '\0';
+      break;
+    }
+
+    dst[i] = src[s + i];
+  }
+
+  return true;
 }
 
 void setup()
@@ -92,44 +157,6 @@ void setup()
     return;
   }
 
-  IniFile ini("CONFIG.INI");
-
-  if (!ini.open()) {
-    Serial.print("Ini file does not exist");
-    // Cannot do anything else
-    while (1)
-      ;
-  }
-  Serial.println("Ini file exists");
-
-  const size_t size = 80;
-  char buffer[size];
-  for (size_t i = 0; i < size; i += 1)
-  {
-    buffer[i] = 0;
-  }
-
-  // Check the file is valid. This can be used to warn if any lines
-  // are longer than the buffer.
-  if (!ini.validate(buffer, size)) {
-    Serial.print("ini file ");
-    Serial.print(ini.getFilename());
-    Serial.print(" not valid: ");
-    printErrorMessage(ini.getError());
-    while (1)
-      ;
-  }
-  
-  // Fetch a value from a key which is present
-  if (ini.getValue("network", "mac", buffer, size)) {
-    Serial.print("section 'network' has an entry 'mac' with value ");
-    Serial.println(buffer);
-  } else {
-    Serial.print("Could not read 'mac' from section 'network', error was ");
-    printErrorMessage(ini.getError());
-  }
-
-/*
   File f_Config = SD.open("CONFIG.INI");
 
   Serial.println("Info: Allocating memory for config file...");
@@ -150,9 +177,24 @@ void setup()
 
   Serial.println("Config content: ");
   Serial.println(cfg_content);
+  Serial.println("\n");
 
   f_Config.close();
-*/
+
+  char mac[18];
+  mac[18-1] = '\0';
+  ini_get_value(cfg_content, "network", "MAC", mac, 17);
+  char endpoint[25];
+  ini_get_value(cfg_content, "api", "check_access", endpoint, 20);
+  char endpoint2[20];
+  ini_get_value(cfg_content, "api", "update_state", endpoint2, 20);
+
+  Serial.println(mac);
+  Serial.println(endpoint);
+  Serial.println(endpoint2);
+
+  free(cfg_content);
+
   return;
 /*
   Serial.begin(9600);
