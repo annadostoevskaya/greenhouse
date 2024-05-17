@@ -14,4 +14,5 @@ References:
 - Understanding SPI: https://youtu.be/0nVNwozXsIc
 - [!] Chinese Arduino CH340G drivers: https://www.wch-ic.com/products/CH340.html
 - AVR-libc malloc: https://www.nongnu.org/avr-libc/user-manual/malloc.html
+- AVR progmem: https://gcc.gnu.org/onlinedocs/gcc/AVR-Variable-Attributes.html#index-progmem-variable-attribute_002c-AVR
 
