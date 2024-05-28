@@ -1,16 +1,8 @@
-/*
- * Author: @github.com/annadostoevskaya
- * Filename: ini.cpp
- * Created: 18 May 2024 3:39:00 AM
- * Last Update: 18 May 2024 3:51:36 AM
- *
- * Description: <EMPTY>
- */
-
-#include "ini.h"
 #include "NoCString.h"
+#include <stddef.h>
+#include <stdint.h>
 
-size_t ini_search_section(const char *src, const char *section) {
+int32_t ini_search_section(const char *src, const char *section) {
   size_t cursor = 0;
   const char *begin = nullptr;
   const char *end = nullptr;
@@ -40,7 +32,7 @@ size_t ini_search_section(const char *src, const char *section) {
   return -1;
 }
 
-size_t ini_search_key(const char *src, const char *key) {
+int32_t ini_search_key(const char *src, const char *key) {
   size_t cursor = 0;
   const char *begin = nullptr;
   const char *end = nullptr;
@@ -72,12 +64,12 @@ size_t ini_search_key(const char *src, const char *key) {
 }
 
 NoCString ini_get_value(const char *src, const char *section, const char *key) {
-  size_t section_shift = ini_search_section(src, section);
+  int32_t section_shift = ini_search_section(src, section);
   if (section_shift == -1) {
     return {};
   }
 
-  size_t key_shift = ini_search_key(src + section_shift, key);
+  int32_t key_shift = ini_search_key(src + section_shift, key);
   if (key_shift == -1) {
     return {};
   }

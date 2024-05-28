@@ -3,9 +3,9 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(8, HIGH); // Disable
-  delay(1000);
   digitalWrite(8, LOW); // Enable
+  delay(1000);
+  digitalWrite(8, HIGH); // Disable
   delay(1000);
 }
 

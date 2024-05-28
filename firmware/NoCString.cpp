@@ -1,12 +1,3 @@
-/*
- * Author: @github.com/annadostoevskaya
- * Filename: NoCString.cpp
- * Created: 18 May 2024 3:42:05 AM
- * Last Update: 18 May 2024 3:52:13 AM
- *
- * Description: <EMPTY>
- */
-
 #include <stddef.h>
 
 class NoCString {
