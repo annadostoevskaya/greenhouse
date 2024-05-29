@@ -5,6 +5,7 @@
  * Last Update: 12 May 2024 2:39:50 AM
  *
  * Description:
+ * - Deivce MAC address: 00:b0:5a:85:6b:00
  * - Hardware:
  * - Ethernet Shield <EMPTY>
  * -
@@ -17,6 +18,7 @@
  * - SD@1.2.4
  * - "DHT sensor library"@1.4.6
  * - "Adafruit TSL2561"@1.1.2
+ * - ArduinoHttpClient@0.6.0
  */
 
 #include <stdint.h>
@@ -34,6 +36,43 @@
 #include "ini.h"
 #include "NoCString.h"
 
+bool parse_mac(NoCString& s, uint8_t mac[6])
+{
+  if (s.end - s.begin != 17) return false;
+
+  memset(mac, 0, 6);
+
+  int8_t i = 0;
+  for (const char *iter = s.begin; iter < s.end; iter += 1)
+  {
+    if (*iter == ':' || *iter == '-')
+    {
+      i += 1;
+      if (i >= 6) break;
+      continue;
+    }
+
+
+    mac[i] *= 16;
+    if (isdigit(*iter))
+    {
+      mac[i] += (*iter - '0');
+      continue;
+    }
+
+    if (isxdigit(*iter))
+    {
+      mac[i] += (toupper(*iter) - 55);
+      continue;
+    }
+
+    memset(mac, 0, 6);
+    return false;
+  }
+
+  return true;
+}
+
 enum EthernetDHCPStatus
 {
   ETHERNET_DHCP_NOTHING = 0,
@@ -43,12 +82,8 @@ enum EthernetDHCPStatus
   ETHERNET_DHCP_REBIND_SUCCESS
 };
 
-Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
-
-#define DHTPIN 2
-#define DHTTYPE DHT22
-
-DHT dht(DHTPIN, DHTTYPE);
+Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
+DHT g_DHT(0x2, DHT22);
 
 void setup()
 {
@@ -57,17 +92,17 @@ void setup()
   Serial.begin(9600);
 
   /**************************** Setup tsl2561 ****************************/
-  if (!tsl.begin())
+  if (!g_TSL2561.begin())
   {
     Serial.println(F("Error: No TSL2561 detected... Check your wiring or I2C ADDR!"));
     for (;;) { delay(10); }
   }
 
-  tsl.enableAutoRange(true);
-  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);
+  g_TSL2561.enableAutoRange(true);
+  g_TSL2561.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);
 
   /**************************** Setup dht11 ******************************/
-  dht.begin();
+  g_DHT.begin();
 
   /**************************** Setup SD card ****************************/
   Serial.println(F("Info: Intializing SD card..."));
@@ -78,6 +113,7 @@ void setup()
   }
 
   /**************************** Reading config ***************************/
+  Serial.println(F("Info: Reading config file..."));
   if (!SD.exists("CONFIG.INI"))
   {
     Serial.println(F("Error: Can't find config file!"));
@@ -85,7 +121,6 @@ void setup()
   }
 
   File f_Config = SD.open("CONFIG.INI");
-  Serial.println(F("Info: Allocating memory for config file..."));
   size_t cfg_size = f_Config.size();
   char *cfg_content = (char *)malloc(f_Config.size()) + 1;
   cfg_content[cfg_size] = '\0';
@@ -95,7 +130,6 @@ void setup()
     for (;;) { speaker(500); }
   }
 
-  Serial.println(F("Info: Reading config file..."));
   if (f_Config.read(cfg_content, cfg_size) == -1)
   {
     Serial.println(F("Error: Failed to read config file."));
@@ -113,8 +147,20 @@ void setup()
 
   /**************************** Setup Ethernet ***************************/
   Serial.println(F("Info: Intializing Ethernet..."));
-  uint8_t g_MAC[6] = parse_mac(network_mac); // { 0x00, 0x12, 0x034, 0x56, 0x78, 0x90 };
-  if (Ethernet.begin(g_MAC) == 0)
+  uint8_t mac[6];
+  if (!parse_mac(network_mac, mac))
+  {
+    Serial.println(F("Error: Failed to parse MAC address"));
+    for (;;) { speaker(500); }
+  }
+
+  for (int i = 0; i < 6; i += 1)
+  {
+    Serial.println(mac[i], HEX);
+  }
+  return;
+
+  if (Ethernet.begin(mac) == 0)
   {
     Serial.println(F("Error: Failed to configure Ethernet using DHCP."));
     if (Ethernet.hardwareStatus() == EthernetNoHardware)  Serial.println(F("Error: Ethernet shield was not found."));
@@ -129,7 +175,7 @@ void setup()
 void loop()
 {
   sensors_event_t event;
-  tsl.getEvent(&event);
+  g_TSL2561.getEvent(&event);
 
   if (event.light)
   {
@@ -143,8 +189,8 @@ void loop()
     for (;;) { delay(10); }
   }
 
-  float h = dht.readHumidity();
-  float t = dht.readTemperature();
+  float h = g_DHT.readHumidity();
+  float t = g_DHT.readTemperature();
 
   if (isnan(h) || isnan(t))
   {

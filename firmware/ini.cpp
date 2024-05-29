@@ -81,5 +81,5 @@ NoCString ini_get_value(const char *src, const char *section, const char *key) {
     ;
   ;
 
-  return {src + shift, src + cursor - 1};
+  return {(src + shift), (src + cursor - 1)};
 }
