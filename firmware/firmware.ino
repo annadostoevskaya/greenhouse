@@ -137,7 +137,6 @@ void setup()
   }
 
   f_Config.close();
-  Serial.println(cfg_content);
 
   NoCString network_mac       = ini_get_value(cfg_content, "network", "MAC");
   NoCString api_check_access  = ini_get_value(cfg_content, "api",     "check_access");
@@ -156,8 +155,10 @@ void setup()
 
   for (int i = 0; i < 6; i += 1)
   {
-    Serial.println(mac[i], HEX);
+    Serial.print(mac[i], HEX);
+    if (i < 5) { Serial.print(':'); }
   }
+  Serial.println();
   return;
 
   if (Ethernet.begin(mac) == 0)
@@ -205,7 +206,7 @@ void loop()
   Serial.println(F("°C"));
 
   delay(250);
-
+/*
   EthernetClient eth0;
   HttpClient http = HttpClient(eth0, "google.com", 80);
   http.get("/");
@@ -239,4 +240,5 @@ void loop()
     case ETHERNET_DHCP_REBIND_FAILED: Serial.println(F("Error: rebind fail")); break;
     default: {} break;
   }
+*/
 }
