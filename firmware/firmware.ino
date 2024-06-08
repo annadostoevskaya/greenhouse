@@ -83,7 +83,7 @@ enum EthernetDHCPStatus
 };
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
-DHT g_DHT(0x3, DHT22);
+DHT g_DHT(0x7, DHT22);
 
 void setup()
 {
@@ -205,28 +205,6 @@ void loop()
   Serial.print(F("% T: "));
   Serial.print(t);
   Serial.println(F("°C"));
-
-  if (g_Client.connect({192, 168, 0, 16}, 80))
-  {
-    g_Client.println("GET / HTTP/1.0");
-    g_Client.println();
-  }
-  else
-  {
-    Serial.println(F("Error: Connection with server failed!"));
-    for (;;) { speaker(1000); }
-  }
-
-  while (g_Client.available())
-  {
-    char c = g_Client.read();
-    Serial.println(c);
-  }
-
-  if (!g_Client.connected())
-  {
-    g_Client.stop();
-  }
 
   switch (Ethernet.maintain())
   {
