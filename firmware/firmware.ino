@@ -83,7 +83,7 @@ enum EthernetDHCPStatus
 };
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
-DHT g_DHT(0x2, DHT22);
+DHT g_DHT(0x3, DHT22);
 
 void setup()
 {
@@ -159,7 +159,6 @@ void setup()
     if (i < 5) { Serial.print(':'); }
   }
   Serial.println();
-  return;
 
   if (Ethernet.begin(mac) == 0)
   {
@@ -172,6 +171,8 @@ void setup()
   Serial.print(F("Info: IP address: "));
   Serial.println(Ethernet.localIP());
 }
+
+EthernetClient g_Client;
 
 void loop()
 {
@@ -205,20 +206,27 @@ void loop()
   Serial.print(t);
   Serial.println(F("°C"));
 
-  delay(250);
-/*
-  EthernetClient eth0;
-  HttpClient http = HttpClient(eth0, "google.com", 80);
-  http.get("/");
+  if (g_Client.connect({192, 168, 0, 16}, 80))
+  {
+    g_Client.println("GET / HTTP/1.0");
+    g_Client.println();
+  }
+  else
+  {
+    Serial.println(F("Error: Connection with server failed!"));
+    for (;;) { speaker(1000); }
+  }
 
-  uint32_t status = http.responseStatusCode();
-  String response = http.responseBody();
+  while (g_Client.available())
+  {
+    char c = g_Client.read();
+    Serial.println(c);
+  }
 
-  Serial.print("Status code: ");
-  Serial.println(status);
-  Serial.println("Response: ");
-  Serial.println(response);
-  delay(10000);
+  if (!g_Client.connected())
+  {
+    g_Client.stop();
+  }
 
   switch (Ethernet.maintain())
   {
@@ -240,5 +248,4 @@ void loop()
     case ETHERNET_DHCP_REBIND_FAILED: Serial.println(F("Error: rebind fail")); break;
     default: {} break;
   }
-*/
 }
