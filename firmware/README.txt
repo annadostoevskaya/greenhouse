@@ -5,6 +5,7 @@ NOTE:
     so before power your device, check and make sure that doesn't: https://imgur.com/a/3BRN1gR
 - [!] About Shield/SD: The FAT format uses the familiar but limited naming convention,
     where a file or directory name can have up to eight letters, followed by a period and then the three-letter extension.
+- [!] For access to serial monitor just type `stty -F /dev/ttyUSB0 raw 9600 && cat /dev/ttyUSB0` at terminal
 
 References:
 - Ethernet Shield tutorials: https://startingelectronics.org/tutorials/arduino/ethernet-shield-web-server-tutorial/
