@@ -29,6 +29,7 @@
 #include <SPI.h>
 #include <DHT.h>
 #include <Ethernet.h>
+#include <EthernetUdp.h>
 #include <SD.h>
 
 #define _DEBUG
@@ -84,6 +85,7 @@ enum EthernetDHCPStatus
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
 DHT g_DHT(0x7, DHT22);
+EthernetUDP g_Client;
 
 void setup()
 {
@@ -114,13 +116,13 @@ void setup()
 
   /**************************** Reading config ***************************/
   Serial.println(F("Info: Reading config file..."));
-  if (!SD.exists("CONFIG.INI"))
+  if (!SD.exists(F("CONFIG.INI")))
   {
     Serial.println(F("Error: Can't find config file!"));
     for (;;) { speaker(500); }
   }
 
-  File f_Config = SD.open("CONFIG.INI");
+  File f_Config = SD.open(F("CONFIG.INI"));
   size_t cfg_size = f_Config.size();
   char *cfg_content = (char *)malloc(f_Config.size()) + 1;
   cfg_content[cfg_size] = '\0';
@@ -170,9 +172,9 @@ void setup()
 
   Serial.print(F("Info: IP address: "));
   Serial.println(Ethernet.localIP());
-}
 
-EthernetClient g_Client;
+  g_Client.begin(1337);
+}
 
 void loop()
 {
@@ -205,6 +207,10 @@ void loop()
   Serial.print(F("% T: "));
   Serial.print(t);
   Serial.println(F("°C"));
+
+  g_Client.beginPacket({192, 168, 0, 1}, 80);
+  g_Client.print(F("GET / HTTP/1.1\r\n"));
+  g_Client.endPacket();
 
   switch (Ethernet.maintain())
   {
