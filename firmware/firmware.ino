@@ -85,7 +85,6 @@ enum EthernetDHCPStatus
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
 DHT g_DHT(0x7, DHT22);
-EthernetUDP g_Client;
 
 void setup()
 {
@@ -162,6 +161,9 @@ void setup()
   }
   Serial.println();
 
+#ifdef _DEBUG
+  Ethernet.begin(mac, {10, 0, 0, 2});
+#else
   if (Ethernet.begin(mac) == 0)
   {
     Serial.println(F("Error: Failed to configure Ethernet using DHCP."));
@@ -169,11 +171,10 @@ void setup()
     else if (Ethernet.linkStatus() == LinkOFF)            Serial.println(F("Error: Ethernet cable is not connected."));
     for (;;) { delay(10); }
   }
+#endif
 
   Serial.print(F("Info: IP address: "));
   Serial.println(Ethernet.localIP());
-
-  g_Client.begin(1337);
 }
 
 void loop()
@@ -208,10 +209,24 @@ void loop()
   Serial.print(t);
   Serial.println(F("°C"));
 
-  g_Client.beginPacket({192, 168, 0, 1}, 80);
-  g_Client.print(F("GET / HTTP/1.1\r\n"));
-  g_Client.endPacket();
+  EthernetClient cli;
+  if (cli.connect({10, 0, 0, 1}, 80))
+  {
+    cli.println("GET / HTTP/1.1\r\n");
 
+    delay(5000);
+
+    while(cli.available())
+    {
+      char c = cli.read();
+      Serial.print(c);
+    }
+    Serial.println();
+
+    cli.stop();
+  }
+
+#if !defined(_DEBUG)
   switch (Ethernet.maintain())
   {
     case ETHERNET_DHCP_RENEW_SUCCESS:
@@ -232,4 +247,5 @@ void loop()
     case ETHERNET_DHCP_REBIND_FAILED: Serial.println(F("Error: rebind fail")); break;
     default: {} break;
   }
+#endif
 }
