@@ -1,4 +1,5 @@
 #include "NoCString.h"
+#include <Arduino.h>
 #include <stddef.h>
 
 NoCString::NoCString(const char *begin_, const char *end_)
@@ -6,18 +7,18 @@ NoCString::NoCString(const char *begin_, const char *end_)
 
 NoCString::NoCString() : NoCString(nullptr, nullptr) {}
 
-#if defined(_DEBUG)
-void NoCString::print() {
+void NoCString::print(Print &o) {
   for (const char *iter = begin; iter < end; iter += 1) {
-    Serial.print(*iter);
+    o.print(*iter);
   }
 }
 
-void NoCString::println() {
-  print();
-  Serial.println();
+void NoCString::println(Print &o) {
+  print(o);
+  o.println();
 }
-#endif
+
+bool NoCString::is_empty() { return begin == end; }
 
 // TODO(annad): Move to operator=
 size_t str_compare(NoCString *str, const char *cstr) {

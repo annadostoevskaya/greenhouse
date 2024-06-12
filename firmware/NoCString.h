@@ -2,13 +2,14 @@
  * Author: @github.com/annadostoevskaya
  * Filename: NoCString.h
  * Created: 18 May 2024 3:40:17 AM
- * Last Update: 29 May 2024 8:19:52 AM
+ * Last Update: 12 Jun 2024 11:41:48 PM
  *
  * Description: <EMPTY>
  */
 
 #pragma once
 
+#include <Arduino.h>
 #include <stddef.h>
 
 class NoCString {
@@ -19,10 +20,9 @@ public:
   NoCString(const char *begin_, const char *end_);
   NoCString();
 
-#if defined(_DEBUG)
-  void print();
-  void println();
-#endif
+  void print(Print &o);
+  void println(Print &o);
+  bool is_empty();
 };
 
 size_t str_compare(NoCString *str, const char *cstr);

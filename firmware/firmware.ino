@@ -32,8 +32,6 @@
 #include <EthernetUdp.h>
 #include <SD.h>
 
-#define _DEBUG
-
 #include "ini.h"
 #include "NoCString.h"
 
@@ -52,7 +50,6 @@ bool parse_mac(NoCString& s, uint8_t mac[6])
       if (i >= 6) break;
       continue;
     }
-
 
     mac[i] *= 16;
     if (isdigit(*iter))
@@ -74,17 +71,39 @@ bool parse_mac(NoCString& s, uint8_t mac[6])
   return true;
 }
 
-enum EthernetDHCPStatus
+bool parse_ip(NoCString& s, uint8_t ip[4])
 {
-  ETHERNET_DHCP_NOTHING = 0,
-  ETHERNET_DHCP_RENEW_FAILED,
-  ETHERNET_DHCP_RENEW_SUCCESS,
-  ETHERNET_DHCP_REBIND_FAILED,
-  ETHERNET_DHCP_REBIND_SUCCESS
-};
+  if (s.end - s.begin >= 16) return false;
+  memset(ip, 0, 4);
+
+  int8_t i = 0;
+  for (const char *iter = s.begin; iter < s.end; iter += 1)
+  {
+    if (*iter == '.')
+    {
+      i += 1;
+      if (i >= 4) break;
+      continue;
+    }
+
+    ip[i] *= 10;
+    if (isdigit(*iter))
+    {
+      ip[i] += (*iter - '0');
+      continue;
+    }
+
+    memset(ip, 0, 4);
+    return false;
+  }
+
+  return true;
+}
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
 DHT g_DHT(0x7, DHT22);
+EthernetServer g_Server(80);
+NoCString g_ProxyAuth;
 
 void setup()
 {
@@ -139,39 +158,37 @@ void setup()
 
   f_Config.close();
 
-  NoCString network_mac       = ini_get_value(cfg_content, "network", "MAC");
-  NoCString api_check_access  = ini_get_value(cfg_content, "api",     "check_access");
-  NoCString api_update_state  = ini_get_value(cfg_content, "api",     "update_state");
-  NoCString http_auth         = ini_get_value(cfg_content, "http",    "authorization");
-  NoCString proxy_auth        = ini_get_value(cfg_content, "proxy",   "authorization");
+  NoCString network_mac = ini_get_value(cfg_content, "network", "MAC");
+  NoCString network_ip  = ini_get_value(cfg_content, "network", "IP");
+  g_ProxyAuth = ini_get_value(cfg_content, "proxy",   "authorization");
 
   /**************************** Setup Ethernet ***************************/
   Serial.println(F("Info: Intializing Ethernet..."));
   uint8_t mac[6];
-  if (!parse_mac(network_mac, mac))
+  uint8_t ip[4];
+  if (parse_mac(network_mac, mac) && parse_ip(network_ip, ip))
   {
-    Serial.println(F("Error: Failed to parse MAC address"));
+    Serial.print(F("Info: Parse MAC: "));
+    for (int i = 0; i < 6; i += 1) {
+      Serial.print(mac[i], HEX);
+      if (i != 5) Serial.print(':');
+    }
+    Serial.println();
+
+    Serial.print(F("Info: Parse IP: "));
+    for (int i = 0; i < 4; i += 1) {
+      Serial.print(ip[i]);
+      if (i != 3) Serial.print('.');
+    }
+    Serial.println();
+  }
+  else
+  {
+    Serial.println(F("Error: Failed to parse MAC or IP address"));
     for (;;) { speaker(500); }
   }
 
-  for (int i = 0; i < 6; i += 1)
-  {
-    Serial.print(mac[i], HEX);
-    if (i < 5) { Serial.print(':'); }
-  }
-  Serial.println();
-
-#ifdef _DEBUG
-  Ethernet.begin(mac, {10, 0, 0, 2});
-#else
-  if (Ethernet.begin(mac) == 0)
-  {
-    Serial.println(F("Error: Failed to configure Ethernet using DHCP."));
-    if (Ethernet.hardwareStatus() == EthernetNoHardware)  Serial.println(F("Error: Ethernet shield was not found."));
-    else if (Ethernet.linkStatus() == LinkOFF)            Serial.println(F("Error: Ethernet cable is not connected."));
-    for (;;) { delay(10); }
-  }
-#endif
+  Ethernet.begin(mac, ip);
 
   Serial.print(F("Info: IP address: "));
   Serial.println(Ethernet.localIP());
@@ -179,73 +196,60 @@ void setup()
 
 void loop()
 {
-  sensors_event_t event;
-  g_TSL2561.getEvent(&event);
+  EthernetClient cli = g_Server.available();
 
-  if (event.light)
+  if (cli)
   {
-    Serial.print(F("L: "));
-    Serial.print(event.light);
-    Serial.print(F("lux"));
-  }
-  else
-  {
-    Serial.println("Error: Sensor overload");
-    for (;;) { delay(10); }
-  }
+    Serial.println(F("Info: Client available, quantities scanning..."));
+    sensors_event_t event;
+    g_TSL2561.getEvent(&event);
+    float h = g_DHT.readHumidity();
+    float t = g_DHT.readTemperature();
 
-  float h = g_DHT.readHumidity();
-  float t = g_DHT.readTemperature();
+    bool eof = true;
 
-  if (isnan(h) || isnan(t))
-  {
-    Serial.println(F("Error: Failed to read from DHT sensor!"));
-    for (;;) { delay(10); }
-  }
-
-  Serial.print(F(" H: "));
-  Serial.print(h);
-  Serial.print(F("% T: "));
-  Serial.print(t);
-  Serial.println(F("°C"));
-
-  EthernetClient cli;
-  if (cli.connect({10, 0, 0, 1}, 80))
-  {
-    cli.println("GET / HTTP/1.1\r\n");
-
-    delay(5000);
-
-    while(cli.available())
+    while (cli.connected())
     {
-      char c = cli.read();
-      Serial.print(c);
-    }
-    Serial.println();
+      if (cli.available())
+      {
+        char c = cli.read();
+        // Serial.print(c);
 
+        if (c == '\n' && eof)
+        {
+          Serial.println(F("Info: Sending..."));
+          cli.println(F("HTTP/1.1 200 OK"));
+          cli.println(F("Content-Type: application/json"));
+          cli.println(F("Connection: close"));
+          if (!g_ProxyAuth.is_empty())
+          {
+            cli.print(F("Proxy-Authorization: Basic "));
+            g_ProxyAuth.println(cli);
+          }
+
+          cli.println();
+          cli.print(F("{\"H\":"));
+          cli.print(h);
+          cli.print(F(",\"T\":"));
+          cli.print(t);
+          cli.print(F(",\"L\":"));
+          cli.print(event.light);
+          cli.print('}');
+          break;
+        }
+
+        if (c == '\n')
+        {
+          eof = true;
+        }
+        else if (c != '\r')
+        {
+          eof = false;
+        }
+      }
+    }
+
+    delay(1);
     cli.stop();
   }
-
-#if !defined(_DEBUG)
-  switch (Ethernet.maintain())
-  {
-    case ETHERNET_DHCP_RENEW_SUCCESS:
-    {
-      Serial.println(F("Info: Renewed success"));
-      Serial.print(F("Info: My IP address: "));
-      Serial.println(Ethernet.localIP());
-    } break;
-
-    case ETHERNET_DHCP_REBIND_SUCCESS:
-    {
-      Serial.println(F("Info: Rebind success"));
-      Serial.print(F("Info: My IP address: "));
-      Serial.println(Ethernet.localIP());
-    } break;
-
-    case ETHERNET_DHCP_RENEW_FAILED: Serial.println(F("Error: renewed fail")); break;
-    case ETHERNET_DHCP_REBIND_FAILED: Serial.println(F("Error: rebind fail")); break;
-    default: {} break;
-  }
-#endif
 }
