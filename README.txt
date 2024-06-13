@@ -1,4 +1,6 @@
-# greenhouse firmware
+# FGL-GH-24
+
+FGL-GH-24 © 2024 by Anna Dostoevskaya is licensed under CC BY-NC 4.0
 
 NOTE:
 - [!] In Chinese version of Ethernet Shield LAN contact contacting Arduino board,
