@@ -20,9 +20,8 @@ void NoCString::println(Print &o) {
 
 bool NoCString::is_empty() { return begin == end; }
 
-// TODO(annad): Move to operator=
-size_t str_compare(NoCString *str, const char *cstr) {
-  for (const char *iter = str->begin; iter < str->end; iter += 1) {
+bool NoCString::cmp(const char *cstr) {
+  for (const char *iter = begin; iter < end; iter += 1) {
     if (*cstr == '\0' || *iter != *cstr++) {
       return false;
     }

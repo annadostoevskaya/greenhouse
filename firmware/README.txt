@@ -16,4 +16,4 @@ References:
 - [!] Chinese Arduino CH340G drivers: https://www.wch-ic.com/products/CH340.html
 - AVR-libc malloc: https://www.nongnu.org/avr-libc/user-manual/malloc.html
 - AVR progmem: https://gcc.gnu.org/onlinedocs/gcc/AVR-Variable-Attributes.html#index-progmem-variable-attribute_002c-AVR
-
+- How to connect 2 computers direct: https://faqpc.ru/soedinit-dva-kompyutera-po-seti/

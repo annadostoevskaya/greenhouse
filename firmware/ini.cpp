@@ -25,7 +25,7 @@ int32_t ini_search_section(const char *src, const char *section) {
     ;
 
     NoCString s{begin, end};
-    if (str_compare(&s, section))
+    if (s.cmp(section))
       return cursor;
   }
 
@@ -49,7 +49,7 @@ int32_t ini_search_key(const char *src, const char *key) {
       end -= 1;
 
     NoCString k{begin, end};
-    if (str_compare(&k, key)) {
+    if (k.cmp(key)) {
       while (src[cursor] != '\0' && src[cursor] == ' ')
         cursor += 1;
       return cursor;

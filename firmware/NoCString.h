@@ -2,7 +2,7 @@
  * Author: @github.com/annadostoevskaya
  * Filename: NoCString.h
  * Created: 18 May 2024 3:40:17 AM
- * Last Update: 12 Jun 2024 11:41:48 PM
+ * Last Update: 13 Jun 2024 11:29:10 PM
  *
  * Description: <EMPTY>
  */
@@ -23,6 +23,5 @@ public:
   void print(Print &o);
   void println(Print &o);
   bool is_empty();
+  bool cmp(const char *cstr);
 };
-
-size_t str_compare(NoCString *str, const char *cstr);

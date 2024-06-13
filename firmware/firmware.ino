@@ -4,106 +4,37 @@
  * Created: 12 May 2024 2:39:28 AM
  * Last Update: 12 May 2024 2:39:50 AM
  *
- * Description:
- * - Deivce MAC address: 00:b0:5a:85:6b:00
- * - Hardware:
+ * Hardware:
  * - Ethernet Shield <EMPTY>
- * -
- * - Used platform:
+ *
+ * Used platform:
  * - arduino:avr@1.8.6
- * -
- * - Libraries:
+ *
+ * Libraries:
  * - SPI@1.0
  * - Ethernet@2.0.2
  * - SD@1.2.4
  * - "DHT sensor library"@1.4.6
  * - "Adafruit TSL2561"@1.1.2
- * - ArduinoHttpClient@0.6.0
  */
 
 #include <stdint.h>
 
 #include <Wire.h>
+#include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_TSL2561_U.h>
-#include <SPI.h>
 #include <DHT.h>
 #include <Ethernet.h>
-#include <EthernetUdp.h>
 #include <SD.h>
 
 #include "ini.h"
 #include "NoCString.h"
-
-bool parse_mac(NoCString& s, uint8_t mac[6])
-{
-  if (s.end - s.begin != 17) return false;
-
-  memset(mac, 0, 6);
-
-  int8_t i = 0;
-  for (const char *iter = s.begin; iter < s.end; iter += 1)
-  {
-    if (*iter == ':' || *iter == '-')
-    {
-      i += 1;
-      if (i >= 6) break;
-      continue;
-    }
-
-    mac[i] *= 16;
-    if (isdigit(*iter))
-    {
-      mac[i] += (*iter - '0');
-      continue;
-    }
-
-    if (isxdigit(*iter))
-    {
-      mac[i] += (toupper(*iter) - 55);
-      continue;
-    }
-
-    memset(mac, 0, 6);
-    return false;
-  }
-
-  return true;
-}
-
-bool parse_ip(NoCString& s, uint8_t ip[4])
-{
-  if (s.end - s.begin >= 16) return false;
-  memset(ip, 0, 4);
-
-  int8_t i = 0;
-  for (const char *iter = s.begin; iter < s.end; iter += 1)
-  {
-    if (*iter == '.')
-    {
-      i += 1;
-      if (i >= 4) break;
-      continue;
-    }
-
-    ip[i] *= 10;
-    if (isdigit(*iter))
-    {
-      ip[i] += (*iter - '0');
-      continue;
-    }
-
-    memset(ip, 0, 4);
-    return false;
-  }
-
-  return true;
-}
+#include "parsers.h"
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
 DHT g_DHT(0x7, DHT22);
 EthernetServer g_Server(80);
-NoCString g_ProxyAuth;
 
 void setup()
 {
@@ -160,7 +91,6 @@ void setup()
 
   NoCString network_mac = ini_get_value(cfg_content, "network", "MAC");
   NoCString network_ip  = ini_get_value(cfg_content, "network", "IP");
-  g_ProxyAuth = ini_get_value(cfg_content, "proxy",   "authorization");
 
   /**************************** Setup Ethernet ***************************/
   Serial.println(F("Info: Intializing Ethernet..."));
@@ -221,12 +151,6 @@ void loop()
           cli.println(F("HTTP/1.1 200 OK"));
           cli.println(F("Content-Type: application/json"));
           cli.println(F("Connection: close"));
-          if (!g_ProxyAuth.is_empty())
-          {
-            cli.print(F("Proxy-Authorization: Basic "));
-            g_ProxyAuth.println(cli);
-          }
-
           cli.println();
           cli.print(F("{\"H\":"));
           cli.print(h);
