@@ -46,7 +46,7 @@ void setup()
   if (!g_TSL2561.begin())
   {
     Serial.println(F("Error: No TSL2561 detected... Check your wiring or I2C ADDR!"));
-    for (;;) { delay(10); }
+    for (;;) { speaker(2000); }
   }
 
   g_TSL2561.enableAutoRange(true);
@@ -60,7 +60,7 @@ void setup()
   if (!SD.begin(4))
   {
     Serial.println(F("Error: SD card initialization failed!"));
-    for (;;) { delay(10); }
+    for (;;) { speaker(2000); }
   }
 
   /**************************** Reading config ***************************/
@@ -130,6 +130,7 @@ void loop()
 
   if (cli)
   {
+    off_speaker();
     Serial.println(F("Info: Client available, quantities scanning..."));
     sensors_event_t event;
     g_TSL2561.getEvent(&event);
@@ -174,6 +175,7 @@ void loop()
     }
 
     delay(1);
+    on_speaker();
     cli.stop();
   }
 }
