@@ -174,7 +174,7 @@ void loop()
       }
     }
 
-    delay(1);
+    cli.flush();
     on_speaker();
     cli.stop();
   }
