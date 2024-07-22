@@ -1,0 +1,7 @@
+services:
+  master:
+    image: alpine:3.20
+    container_name: master
+    volumes:
+      - ./:/master
+    command: tail -f /dev/null

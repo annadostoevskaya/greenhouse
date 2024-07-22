@@ -1,7 +1,5 @@
 # FGL-GH-24
 
-FGL-GH-24 © 2024 by Anna Dostoevskaya is licensed under CC BY-NC 4.0
-
 NOTE:
 - [!] In Chinese version of Ethernet Shield LAN contact contacting Arduino board,
     so before power your device, check and make sure that doesn't: https://imgur.com/a/3BRN1gR

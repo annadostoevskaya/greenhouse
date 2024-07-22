@@ -3,19 +3,6 @@
  * Filename: firmware.ino
  * Created: 12 May 2024 2:39:28 AM
  * Last Update: 12 May 2024 2:39:50 AM
- *
- * Hardware:
- * - Ethernet Shield <EMPTY>
- *
- * Used platform:
- * - arduino:avr@1.8.6
- *
- * Libraries:
- * - SPI@1.0
- * - Ethernet@2.0.2
- * - SD@1.2.4
- * - "DHT sensor library"@1.4.6
- * - "Adafruit TSL2561"@1.1.2
  */
 
 #include <stdint.h>
@@ -33,8 +20,9 @@
 #include "parsers.h"
 
 Adafruit_TSL2561_Unified g_TSL2561 = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 0x752);
-DHT g_DHT(0x7, DHT22);
-EthernetServer g_Server(80);
+DHT g_DHT = DHT(0x7, DHT22);
+/** \brief \link g_Server \endlink up server on Arduino Uno board, listen port 80. */
+EthernetServer g_Server = EthernetServer(80);
 
 void setup()
 {
