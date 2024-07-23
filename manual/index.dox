@@ -13,19 +13,26 @@
  *
  * \section device_sec Device
  *
+ *
  * \subsection device_layout Layout
  *
  * Layout of device and <a href="Layout.fzz">fritizing source file</a>
  *
  * \image html Layout_bb.png width=600px
  *
+ *
  * \subsection device_connecting Connecting
  *
  * The device uses a 220V power supply and a LAN cable to connect to the network.
  *
+ * The **main idea** is that the device must be on the **same local network as the server**
+ * that reads the data and displays it on the site. Therefore, it is necessary for the
+ * **network engineer** to review the documentation and configure the device based on the environment.
+ *
  * To configure your device's network, read the \ref device_config section.
  *
  * For debugging connect COM port, read the \ref device_debugging section.
+ *
  *
  * \subsection device_config config.ini
  *
@@ -42,15 +49,16 @@
  * IP = 10.0.0.2
  * ```
  *
+ *
  * \subsection device_led LED Indication
  *
  * LED installed on board for indicate state of device.
  *
- * - LED disabled: Device enabled or disabled
- * - LED enabled: Undefined Behaviour
- * - fastest blink: Request was handled
- * - slow blink with 2s delay: Hardware errors, e.g. SD card not found, sensors not found
- * - blink with 0.5s delay: Sofware errors, e.g. Can't find config.ini file, Failed to allocate memory
+ * - On/Off: Device enabled/disabled
+ * - Quick blink: HTTP Request was handled
+ * - 2s delay blinking: Hardware errors, e.g. SD card not found, sensors not found
+ * - 0.5s delay: Sofware errors, e.g. Can't find config.ini file, Failed to allocate memory
+ *
  *
  * \subsection device_debugging Debugging
  *
@@ -60,9 +68,20 @@
  * - Info, e.g. `Info: Client available, quantities scanning...`
  * - Error, e.g. `Error: Failed to allocate memory!`
  *
+ *
  * \section api_sec API
  *
- * \subsection Schema
+ * Server configuration defined by #g_Server variable, by default server listen `80` port.
+ *
+ * The server responed to all requests with JSON, stored quantities about greenhouse. See \ref api_schema section.
+ *
+ *
+ * \subsection api_schema Schema
+ *
+ * Quantities aliases:
+ * - H - Humidity
+ * - T - Temperature
+ * - L - Lighting
  *
  * ```json
  * {
@@ -75,12 +94,14 @@
  *
  * \section deps_sec Dependencies
  *
+ *
  * \subsection libraries Libraries
  * - SPI@1.0
  * - Ethernet@2.0.2
  * - SD@1.2.4
  * - "DHT sensor library"@1.4.6
  * - "Adafruit TSL2561"@1.1.2
+ *
  *
  * \subsection platform_and_hardware Platform and hardware
  * - arduino:avr@1.8.6
