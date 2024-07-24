@@ -1,0 +1,17 @@
+/** \page features Features
+ *
+ * \todo Replace Arduino with STM32
+ *
+ * \todo Connect Power Over Ethernet
+ *
+ * \todo Rewrite .ini file library for production (?)
+ *
+ * \todo API token for secure
+ *
+ * \todo `keep-alive` connection between device and server 
+ * OR accumulate data on SD card!
+ *
+ * \todo SSL/HTTPS for embedded device (?)
+ *
+ * \todo DHCP Client for embedded device
+ */

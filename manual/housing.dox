@@ -1,0 +1,11 @@
+/** \page housing Device Housing
+ *
+ * \todo In current version housing don't have space for 220 cable, so you are must cut it yourself
+ *
+ * \image html housing_1.png width=600px
+ *
+ * \image html housing_2.png width=600px
+ *
+ * - <a href="housing_1.m3d">m3d Source 1</a>
+ * - <a href="housing_1.m3d">m3d Source 2</a>
+ */
