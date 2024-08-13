@@ -15,6 +15,6 @@ RUN apk update --no-cache && apk add --no-cache libc6-compat \
 
 RUN apk update --no-cache && apk add --no-cache doxygen && doxygen \
   && rm -rf /usr/share/nginx/html/* \
-  && mkdir /usr/share/nginx/html/x16 \
-  && cp -r ./generated/html/* /usr/share/nginx/html/x16
+  && mkdir /usr/share/nginx/html/greenhouse \
+  && cp -r ./generated/html/* /usr/share/nginx/html/greenhouse
 
