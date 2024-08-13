@@ -6,7 +6,7 @@ WORKDIR /greenhouse
 
 COPY . /greenhouse
 
-RUN cd firmware && apk update --no-cache && apk add --no-cache libc6-compat \
+RUN apk update --no-cache && apk add --no-cache libc6-compat \
   && curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/bin sh \
   && arduino-cli config set network.proxy $http_proxy \
   || arduino-cli core install arduino:avr \
