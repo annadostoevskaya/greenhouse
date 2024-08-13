@@ -2,6 +2,6 @@ services:
   web:
     build: .
     ports:
-      - "1616:80"
+      - "127.0.0.1:1616:80"
     environment:
       - NGINX_PORT=80

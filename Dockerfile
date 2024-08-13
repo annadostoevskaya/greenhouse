@@ -14,5 +14,7 @@ RUN apk update --no-cache && apk add --no-cache libc6-compat \
   && arduino-cli --no-color compile --verbose --warnings all -b arduino:avr:uno --output-dir ./../generated/build
 
 RUN apk update --no-cache && apk add --no-cache doxygen && doxygen \
-  && rm -rf /usr/share/nginx/html/ && cp -r ./generated/html/ /usr/share/nginx/
+  && rm -rf /usr/share/nginx/html/* \
+  && mkdir /usr/share/nginx/html/x16 \
+  && cp -r ./generated/html/* /usr/share/nginx/html/x16
 
