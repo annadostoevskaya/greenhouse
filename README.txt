@@ -6,6 +6,7 @@ NOTE:
 - [!] About Shield/SD: The FAT format uses the familiar but limited naming convention,
     where a file or directory name can have up to eight letters, followed by a period and then the three-letter extension.
 - [!] For access to serial monitor just type `stty -F /dev/ttyUSB0 raw 9600 && cat /dev/ttyUSB0` at terminal
+- [!] For connection by crossover cable: `sudo ip addr add 10.0.0.1/24 brd + dev enp0s25`
 
 References:
 - Ethernet Shield tutorials: https://startingelectronics.org/tutorials/arduino/ethernet-shield-web-server-tutorial/
