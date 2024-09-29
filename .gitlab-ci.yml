@@ -4,7 +4,6 @@ stages:
 deploy-prod:
   stage: deploy
   script:
-    - whoami
     - ssh gitlab@$HOST 'bash -s' < deploy.sh
   environment: production
   rules:

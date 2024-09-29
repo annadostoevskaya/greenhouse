@@ -2,7 +2,11 @@
 
 set -ax
 
+whoami
+
 cd /var/www/greenhouse &&
-	git checkout master &&
-	git pull origin master &&
-	docker compose up --build -d
+  git restore . &&
+  git checkout master &&
+  git reset --hard origin/master &&
+  git pull origin master &&
+  docker compose up --build -d web
