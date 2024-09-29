@@ -1,7 +1,9 @@
 #!/bin/bash
 
 while [ true ]; do
-  curl --verbose -H 'Accept:' -H 'User-Agent:' 10.0.0.2
+  curl -H 'Accept:' -H 'User-Agent:' 192.168.0.64 | tee -a data.json && echo >>data.json
+
+  # curl -H 'Accept:' -H 'User-Agent:' 192.168.0.64
   sleep 0.1
   clear
 done

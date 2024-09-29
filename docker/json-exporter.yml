@@ -1,0 +1,9 @@
+modules:
+  default:
+    metrics: # TODO(annad): Naming convention
+      - name: http_temperature_celsius
+        path: '{ .T }'
+      - name: http_humidity_percent
+        path: '{ .H }'
+      - name: http_light_lux
+        path: '{ .L }'
