@@ -46,7 +46,10 @@
  * MAC = 00:b0:5a:85:6b:00
  * ;; [!] firmware.ino don't use SSL.
  * ;; I stronly advise you to use a local IP address without access from the external network.
- * IP = 10.0.0.2
+ * IP = 192.168.1.63
+ * DNS = 192.168.0.19
+ * GATEWAY = 0.0.0.1
+ * SUBNET = 255.255.252.0
  * ```
  *
  *

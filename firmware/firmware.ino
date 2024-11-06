@@ -75,41 +75,58 @@ void setup()
     for (;;) { speaker(500); }
   }
 
+  Serial.println("CONFIG.INI:");
+  Serial.println(cfg_content);
+
   f_Config.close();
 
-  NoCString network_mac = ini_get_value(cfg_content, "network", "MAC");
-  NoCString network_ip  = ini_get_value(cfg_content, "network", "IP");
+  NoCString network_mac     = ini_get_value(cfg_content, "network", "MAC");
+  NoCString network_ip      = ini_get_value(cfg_content, "network", "IP");
+  NoCString network_dns     = ini_get_value(cfg_content, "network", "DNS");
+  NoCString network_gateway = ini_get_value(cfg_content, "network", "GATEWAY");
+  NoCString network_subnet  = ini_get_value(cfg_content, "network", "SUBNET");
 
   /**************************** Setup Ethernet ***************************/
   Serial.println(F("Info: Intializing Ethernet..."));
+
   uint8_t mac[6];
   uint8_t ip[4];
-  if (parse_mac(network_mac, mac) && parse_ip(network_ip, ip))
+  uint8_t dns[4];
+  uint8_t gateway[4];
+  uint8_t subnet[4];
+
+  if (parse_mac(network_mac, mac)
+    && parse_ip(network_ip, ip)
+    && parse_ip(network_dns, dns)
+    && parse_ip(network_gateway, gateway)
+    && parse_ip(network_subnet, subnet))
   {
-    Serial.print(F("Info: Parse MAC: "));
-    for (int i = 0; i < 6; i += 1) {
+    Ethernet.begin(mac, ip, dns, gateway, subnet);
+
+    Serial.print(F("Info: MAC address: "));
+    Ethernet.MACAddress(mac);
+    for (int i = 0; i < 6; i++) {
       Serial.print(mac[i], HEX);
-      if (i != 5) Serial.print(':');
+      if (i < 5) {
+        Serial.print(':');
+      }
     }
     Serial.println();
 
-    Serial.print(F("Info: Parse IP: "));
-    for (int i = 0; i < 4; i += 1) {
-      Serial.print(ip[i]);
-      if (i != 3) Serial.print('.');
-    }
-    Serial.println();
+    Serial.print(F("Info: IP address: "));
+    Serial.println(Ethernet.localIP());
+    Serial.print(F("Info: gateway IP: "));
+    Serial.println(Ethernet.gatewayIP());
+    Serial.print(F("Info: subnet: "));
+    Serial.println(Ethernet.subnetMask());
+    Serial.print(F("Info: DNS: "));
+    Serial.println(Ethernet.dnsServerIP());
   }
   else
   {
-    Serial.println(F("Error: Failed to parse MAC or IP address"));
+    Serial.println(F("Error: Failed to parse MAC or IP/DNS/GATEWAY/SUBNET address"));
     for (;;) { speaker(500); }
   }
-
-  Ethernet.begin(mac, ip);
-
-  Serial.print(F("Info: IP address: "));
-  Serial.println(Ethernet.localIP());
 }
 
 void loop()
