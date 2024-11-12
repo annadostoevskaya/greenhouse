@@ -19,8 +19,12 @@ services:
       - ./docker/runtime/prometheus:/prometheus
     depends_on:
       - json_exporter
+    networks:
+      - internal
   grafana:
     image: grafana/grafana-enterprise:11.2.1-ubuntu
+    environment:
+      - no_proxy=127.0.0.1,localhost,prometheus
     user: 65534:65534
     ports:
       - 127.0.0.1:3000:3000
