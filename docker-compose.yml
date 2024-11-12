@@ -13,6 +13,9 @@ services:
       - ./docker/json-exporter.yml:/config.yml:ro
   prometheus:
     image: prom/prometheus:v2.55.0-rc.0
+    environment:
+      - no_proxy=127.0.0.1,localhost,json_exporter
+      - NO_PROXY=127.0.0.1,localhost,json_exporter
     depends_on:
       - json_exporter
     networks:
