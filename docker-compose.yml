@@ -14,8 +14,8 @@ services:
   prometheus:
     image: prom/prometheus:v2.55.0-rc.0
     environment:
-      - no_proxy=127.0.0.1,localhost,json_exporter
       - NO_PROXY=127.0.0.1,localhost,json_exporter
+      - no_proxy=127.0.0.1,localhost,json_exporter
     depends_on:
       - json_exporter
     networks:
@@ -29,8 +29,9 @@ services:
     depends_on:
       - prometheus
     environment:
-      - no_proxy=127.0.0.1,localhost,prometheus
+      - GF_SERVER_ROOT_URL=https://sense.buketov.edu.kz/
       - NO_PROXY=127.0.0.1,localhost,prometheus
+      - no_proxy=127.0.0.1,localhost,prometheus
     ports:
       - 127.0.0.1:3000:3000
     networks:
