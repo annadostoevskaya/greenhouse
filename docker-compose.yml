@@ -28,5 +28,8 @@ services:
       - prometheus
     networks:
       - internal
+    volumes:
+      - ./docker/runtime/grafana:/var/lib/grafana
 networks:
   internal:
+
