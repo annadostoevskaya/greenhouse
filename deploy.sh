@@ -9,4 +9,4 @@ cd /var/www/greenhouse &&
   git checkout master &&
   git reset --hard origin/master &&
   git pull origin master &&
-  docker compose up --build -d web
+  docker compose up --build -d
