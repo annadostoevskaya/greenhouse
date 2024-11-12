@@ -3,6 +3,7 @@ services:
     build: .
     environment:
       - NGINX_PORT=80
+    restart: always
     ports:
       - 127.0.0.1:8080:80
   json_exporter:
@@ -32,6 +33,7 @@ services:
       - GF_SERVER_ROOT_URL=https://sense.buketov.edu.kz/
       - NO_PROXY=127.0.0.1,localhost,prometheus
       - no_proxy=127.0.0.1,localhost,prometheus
+    restart: always
     ports:
       - 127.0.0.1:3000:3000
     networks:
