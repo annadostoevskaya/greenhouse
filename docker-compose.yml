@@ -3,13 +3,14 @@ services:
     build: .
     environment:
       - NGINX_PORT=80
-    restart: always
     ports:
       - 127.0.0.1:8080:80
+    restart: always
   json_exporter:
     image: prometheuscommunity/json-exporter:v0.6.0
     networks:
       - internal
+    restart: always
     volumes:
       - ./docker/json-exporter.yml:/config.yml:ro
   prometheus:
@@ -21,6 +22,7 @@ services:
       - json_exporter
     networks:
       - internal
+    restart: always
     user: 65534:65534
     volumes:
       - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
@@ -33,11 +35,11 @@ services:
       - GF_SERVER_ROOT_URL=https://sense.buketov.edu.kz/
       - NO_PROXY=127.0.0.1,localhost,prometheus
       - no_proxy=127.0.0.1,localhost,prometheus
-    restart: always
     ports:
       - 127.0.0.1:3000:3000
     networks:
       - internal
+    restart: always
     user: 65534:65534
     volumes:
       - ./docker/runtime/grafana:/var/lib/grafana
