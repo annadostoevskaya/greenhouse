@@ -32,7 +32,7 @@ services:
     depends_on:
       - prometheus
     environment:
-      - GF_SERVER_ROOT_URL=https://sense.buketov.edu.kz/
+      - GF_SERVER_ROOT_URL=https://unknown.com/
       - NO_PROXY=127.0.0.1,localhost,prometheus
       - no_proxy=127.0.0.1,localhost,prometheus
     ports:
